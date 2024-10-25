@@ -28,7 +28,7 @@ jobs:
 
       - name: Install Poetry
         run: |
-          pip install poetry
+          pip install poetry --with dev
 
       - name: Configure Poetry
         run: |
