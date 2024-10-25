@@ -28,7 +28,7 @@ jobs:
 
       - name: Install Poetry
         run: |
-          pip install poetry --with dev
+          pip install poetry
 
       - name: Configure Poetry
         run: |
@@ -36,7 +36,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          poetry install 
+          poetry install  --with dev
 
       - name: Build Executable
         uses: Nuitka/Nuitka-Action@main
