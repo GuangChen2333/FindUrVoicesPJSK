@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "FindUrVoicesPJSK"
+version = "1.0.0"
+description = "A simple tool for getting voices of single character of Project Sekai: Colorful Stage feat. Hatsune Miku based on Sekai-World's database"
+authors = ["GuangChen2333 <guangchenworks@outlook.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+httpx = "^0.27.2"
+loguru = "^0.7.2"
+questionary = "^2.0.1"
+tenacity = "^9.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+nuitka = "^2.4.11"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

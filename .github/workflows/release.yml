@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-tag:
+        description: 'Release Tag (1.x.x)'
+        required: true
+
+jobs:
+  build:
+    name: Build Executable
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-13, ubuntu-latest, windows-latest ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: 'x64'
+
+      - name: Install Poetry
+        run: |
+          pip install poetry
+
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create false
+
+      - name: Install Dependencies
+        run: |
+          poetry install 
+
+      - name: Build Executable
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: main.py
+          onefile: true
+          output-file: FindUrVoicesPJSK-v${{ inputs.release-tag }}-${{ runner.os }}
+          company-name: Mooneze
+          product-name: FindUrVoicesPJSK
+          file-version: ${{ inputs.release-tag }}
+          product-version: ${{ inputs.release-tag }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }} Build
+          compression-level: 0
+          retention-days: 2
+          path: |
+            build/*
+            !build/main.*
+
+  upload:
+    name: Upload Releases
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dists/
+          merge-multiple: true
+
+      - name: Display files
+        run: ls -R
+        working-directory: dists
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          name: FindUrVoicesPJSK v${{ inputs.release-tag }}
+          tag_name: v${{ inputs.release-tag }}
+          files: dists/*
