@@ -31,7 +31,7 @@ class Client:
         self._download_data()
 
     @logger.catch
-    def _get(self, url: str, params: Optional[dict] = None) -> httpx.Response:
+    def _get(self, url: str, params: Optional[dict] = None) -> httpx.Response | None:
         retries = 0
         while retries < self._max_retries:
             try:
@@ -44,6 +44,7 @@ class Client:
             except httpx.ConnectError or httpx.ConnectTimeout:
                 retries += 1
                 if retries < self._max_retries:
+                    logger.warning(f"Retrying on get file, times: {retries}")
                     time.sleep(self._wait_time)
                 else:
                     raise httpx.ConnectError
