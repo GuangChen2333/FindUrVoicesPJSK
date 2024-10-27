@@ -28,7 +28,8 @@ class Client:
     @logger.catch
     def _get(self, url: str, params: Optional[dict] = None) -> httpx.Response:
         response = httpx.get(url, params=params)
-        response.raise_for_status()
+        if response.status_code != 200 and response.status_code != 404:
+            response.raise_for_status()
         return response
 
     @logger.catch
@@ -101,6 +102,11 @@ class Client:
                 content = self._get(
                     "https://storage.sekai.best"
                     f"/sekai-jp-assets/music/long/{music_asset_bundle_name}_rip/{music_asset_bundle_name}.mp3").content
+
+                if not content:
+                    logger.warning("Get status code 404, perhaps the resource is not exist.")
+                    return
+
                 f.write(content)
 
             index += 1
@@ -137,6 +143,9 @@ class Client:
 
                 with open(os.path.join(save_path, file_name), "wb") as f:
                     content = self._get(url).content
+                    if not content:
+                        logger.warning("Get status code 404, perhaps the resource is not exist.")
+                        return -1
                     f.write(content)
 
                 index += 1
@@ -197,7 +206,7 @@ class Client:
                     f"{asset_bundle_name}_rip/{scenario_id}.asset"
                 ).json()
 
-                index = self._parse_and_download_asset(
+                index_return = self._parse_and_download_asset(
                     asset,
                     scenario_id,
                     save_path,
@@ -207,6 +216,12 @@ class Client:
                     "C",
                     index
                 )
+
+                if index_return == -1:
+                    logger.warning("Get status code 404, perhaps the resource is not exist.")
+                    return
+
+                index = index_return
 
     @logger.catch
     def download_all(self, character_id: int) -> None:
