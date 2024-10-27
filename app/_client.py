@@ -4,13 +4,18 @@ import time
 
 import questionary
 import httpx
-from tenacity import retry, stop_after_attempt, wait_fixed
 from loguru import logger
 from typing import Optional
 
 
 class Client:
-    def __init__(self, *, save_path: Optional[str] = "./output/", wait_time: Optional[float] = 1):
+    def __init__(
+            self,
+            *,
+            save_path: Optional[str] = "./output/",
+            wait_time: Optional[float] = 1,
+            max_retries: Optional[int] = 5,
+    ):
         logger.remove()
         logger.add(
             sys.stdout,
@@ -21,16 +26,27 @@ class Client:
         )
         self._save_folder = os.path.abspath(save_path)
         self._wait_time = wait_time
+        self._max_retries = max_retries
         logger.info(f"The files will save in {os.path.join(self._save_folder, 'dataset_[ID]\\')}")
         self._download_data()
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
     @logger.catch
     def _get(self, url: str, params: Optional[dict] = None) -> httpx.Response:
-        response = httpx.get(url, params=params)
-        if response.status_code != 200 and response.status_code != 404:
-            response.raise_for_status()
-        return response
+        retries = 0
+        while retries < self._max_retries:
+            try:
+                response = httpx.get(url, params=params)
+
+                if response.status_code != 200 and response.status_code != 404:
+                    response.raise_for_status()
+
+                return response
+            except httpx.ConnectError or httpx.ConnectTimeout:
+                retries += 1
+                if retries < self._max_retries:
+                    time.sleep(self._wait_time)
+                else:
+                    raise httpx.ConnectError
 
     @logger.catch
     def _download_data(self) -> None:
@@ -183,7 +199,7 @@ class Client:
 
     @logger.catch
     def download_character_cards_voices(self, character_id: int) -> None:
-        # Code C000
+        # Code C0000
         save_path = self._check_dataset_folder(character_id)
 
         character_cards = [x for x in self._cards if x['characterId'] == character_id]
@@ -212,7 +228,7 @@ class Client:
                     save_path,
                     select_character_2d_ids,
                     "https://storage.sekai.best/sekai-jp-assets/sound/card_scenario/voice",
-                    3,
+                    4,
                     "C",
                     index
                 )
