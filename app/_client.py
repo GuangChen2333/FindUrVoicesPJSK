@@ -41,7 +41,7 @@ class Client:
                     response.raise_for_status()
 
                 return response
-            except httpx.ConnectError or httpx.ConnectTimeout:
+            except (httpx.ConnectError, httpx.ConnectTimeout):
                 retries += 1
                 if retries < self._max_retries:
                     logger.warning(f"Retrying on get file, times: {retries}")
