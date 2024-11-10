@@ -2,7 +2,6 @@ import os
 import sys
 import time
 
-import loguru
 import questionary
 import httpx
 from loguru import logger

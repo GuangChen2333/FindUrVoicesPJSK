@@ -1,5 +1,5 @@
 from app import Client
-import loguru
+from loguru import logger
 
 if __name__ == '__main__':
     try:
@@ -8,5 +8,5 @@ if __name__ == '__main__':
             client.start()
 
     except KeyboardInterrupt:
-        loguru.logger.info("Exit!")
+        logger.info("Exit!")
         exit(0)
