@@ -43,7 +43,7 @@ jobs:
         with:
           nuitka-version: main
           script-name: main.py
-          one-file: true
+          standalone: true
           output-file: FindUrVoicesPJSK-v${{ inputs.release-tag }}-${{ runner.os }}
           company-name: Mooneze
           product-name: FindUrVoicesPJSK
