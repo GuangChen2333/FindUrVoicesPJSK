@@ -30,26 +30,20 @@ class Client:
         logger.info(f"The files will save in {os.path.join(self._save_folder, 'dataset_[ID]\\')}")
         self._download_data()
 
-    @logger.catch
     def _get(self, url: str, params: Optional[dict] = None) -> httpx.Response | None:
         retries = 0
         while retries < self._max_retries:
             try:
                 response = httpx.get(url, params=params)
-
-                if response.status_code != 200 and response.status_code != 404:
-                    response.raise_for_status()
-
                 return response
-            except (httpx.ConnectError, httpx.ConnectTimeout):
+            except Exception as e:
                 retries += 1
                 if retries < self._max_retries:
-                    logger.warning(f"Retrying on get file, times: {retries}")
+                    logger.warning(f"Retrying on get file, times: {retries}, exception: {e}")
                     time.sleep(self._wait_time)
                 else:
                     raise httpx.ConnectError
 
-    @logger.catch
     def _download_data(self) -> None:
         logger.info("Downloading character data ...")
         self._characters = self._get("https://sekai-world.github.io/sekai-master-db-diff/gameCharacters.json").json()
@@ -93,7 +87,6 @@ class Client:
 
         return save_path
 
-    @logger.catch
     def download_solo_songs(self, character_id: int) -> None:
         # Code S000
         save_path = self._check_dataset_folder(character_id)
@@ -130,7 +123,6 @@ class Client:
 
             time.sleep(self._wait_time)
 
-    @logger.catch
     def _parse_and_download_asset(
             self,
             asset: dict,
@@ -170,7 +162,6 @@ class Client:
 
         return index
 
-    @logger.catch
     def download_character_profile_voices(self, character_id: int) -> None:
         # Code P000
         save_path = self._check_dataset_folder(character_id)
@@ -198,7 +189,6 @@ class Client:
             0
         )
 
-    @logger.catch
     def download_character_cards_voices(self, character_id: int) -> None:
         # Code C0000
         save_path = self._check_dataset_folder(character_id)
@@ -240,7 +230,6 @@ class Client:
 
                 index = index_return
 
-    @logger.catch
     def download_all(self, character_id: int) -> None:
         self.download_solo_songs(character_id)
         self.download_character_profile_voices(character_id)
