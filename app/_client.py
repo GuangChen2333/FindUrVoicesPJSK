@@ -90,7 +90,7 @@ class Client:
     def download_solo_songs(self, character_id: int) -> None:
         # Code S000
         save_path = self._check_dataset_folder(character_id)
-        index = 0
+        index = 1
         for music in self._music_vocals:
             singers = [x['characterId'] for x in music['characters'] if x['characterType'] == 'game_character']
 
@@ -123,17 +123,9 @@ class Client:
 
             time.sleep(self._wait_time)
 
-    def _parse_and_download_asset(
-            self,
-            asset: dict,
-            scenario_id: str,
-            save_path: str,
-            select_character_2d_ids: list,
-            base_url: str,
-            file_name_len: int,
-            prefix: str,
-            index: int,
-    ) -> int:
+    def _parse_and_download_asset(self, asset: dict, scenario_id: str, save_path: str, select_character_2d_ids: list,
+                                  base_url: str, file_name_len: int, prefix: str, index: int,
+                                  count: Optional[int] = None) -> int:
         for data in asset['TalkData']:
             speakers = [x['Character2dId'] for x in data['TalkCharacters']]
             if not len(speakers) == 1:
@@ -158,6 +150,10 @@ class Client:
                     f.write(content)
 
                 index += 1
+
+                if count and index == count + 1:
+                    return index
+
                 time.sleep(self._wait_time)
 
         return index
@@ -186,7 +182,7 @@ class Client:
             "https://storage.sekai.best/sekai-jp-assets/sound/scenario/voice",
             3,
             "P",
-            0
+            1
         )
 
     def download_character_cards_voices(self, character_id: int, card_voices_count: int) -> None:
@@ -199,7 +195,7 @@ class Client:
         select_character_2d_ids = [x['id'] for x in self._character_2ds if x['characterId'] == character_id]
         logger.info(f"Character 2d ids: {", ".join([str(x) for x in select_character_2d_ids])}")
 
-        index = 0
+        index = 1
 
         for card in character_cards:
             asset_bundle_name = card['assetbundleName']
@@ -221,14 +217,15 @@ class Client:
                     "https://storage.sekai.best/sekai-jp-assets/sound/card_scenario/voice",
                     4,
                     "C",
-                    index
+                    index,
+                    card_voices_count
                 )
 
                 if index_return == -1:
                     logger.warning("Get status code 404, perhaps the resource is not exist.")
                     return
 
-                if index_return == (card_voices_count + 1):
+                if index_return == card_voices_count + 1:
                     logger.success(f"Done with max_count: {card_voices_count}")
                     return
 
