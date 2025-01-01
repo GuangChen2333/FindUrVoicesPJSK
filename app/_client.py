@@ -189,7 +189,7 @@ class Client:
             0
         )
 
-    def download_character_cards_voices(self, character_id: int) -> None:
+    def download_character_cards_voices(self, character_id: int, card_voices_count: int) -> None:
         # Code C0000
         save_path = self._check_dataset_folder(character_id)
 
@@ -228,16 +228,20 @@ class Client:
                     logger.warning("Get status code 404, perhaps the resource is not exist.")
                     return
 
+                if index_return == (card_voices_count + 1):
+                    logger.success(f"Done with max_count: {card_voices_count}")
+                    return
+
                 index = index_return
 
-    def download_all(self, character_id: int) -> None:
+    def download_all(self, character_id: int, card_voices_count: int) -> None:
         self.download_solo_songs(character_id)
         self.download_character_profile_voices(character_id)
-        self.download_character_cards_voices(character_id)
+        self.download_character_cards_voices(character_id, card_voices_count)
 
-    def download_pure_voices(self, character_id: int) -> None:
+    def download_pure_voices(self, character_id: int, card_voices_count: int) -> None:
         self.download_character_profile_voices(character_id)
-        self.download_character_cards_voices(character_id)
+        self.download_character_cards_voices(character_id, card_voices_count)
 
     def start(self):
         mode = questionary.select(
@@ -254,12 +258,21 @@ class Client:
         character_id = self.select_character()
 
         if mode == 0:
-            self.download_all(character_id)
+            card_voices_count = int(
+                questionary.text("Please input the card max voices count: ", default="800").ask()
+            )
+            self.download_all(character_id, card_voices_count)
         elif mode == 1:
-            self.download_pure_voices(character_id)
+            card_voices_count = int(
+                questionary.text("Please input the card max voices count: ", default="800").ask()
+            )
+            self.download_pure_voices(character_id, card_voices_count)
         elif mode == 2:
             self.download_solo_songs(character_id)
         elif mode == 3:
             self.download_character_profile_voices(character_id)
         elif mode == 4:
-            self.download_character_cards_voices(character_id)
+            card_voices_count = int(
+                questionary.text("Please input the card max voices count: ", default="800").ask()
+            )
+            self.download_character_cards_voices(character_id, card_voices_count)
