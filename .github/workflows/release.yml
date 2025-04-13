@@ -8,35 +8,27 @@ on:
         required: true
 
 jobs:
-  build:
-    name: Build Executable
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ macos-13, ubuntu-latest, windows-latest ]
+  version:
+    name: Version edit
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     permissions:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.4.0
         with:
           python-version: '3.12'
-          architecture: 'x64'
 
       - name: Install Poetry Action
         uses: snok/install-poetry@v1.4.1
         with:
-            virtualenvs-create: false
-
-      - name: Install Dependencies
-        run: |
-          poetry install --with dev
+          virtualenvs-create: false
 
       - name: Update version
         run: poetry version ${{ inputs.release-tag }}
@@ -54,6 +46,35 @@ jobs:
             git tag "v${{ inputs.release-tag }}"
             git push --follow-tags
           fi
+
+  build:
+    name: Build Executable
+    needs:
+      - version
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-13, ubuntu-latest, windows-latest ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: 'x64'
+
+      - name: Install Poetry Action
+        uses: snok/install-poetry@v1.4.1
+        with:
+          virtualenvs-create: false
+
+      - name: Install Dependencies
+        run: |
+          poetry install --with dev
 
       - name: Build Executable
         uses: Nuitka/Nuitka-Action@v1.1
@@ -79,7 +100,9 @@ jobs:
 
   upload:
     name: Upload Releases
-    needs: [ build ]
+    needs:
+      - version
+      - build
     runs-on: ubuntu-latest
     permissions:
       contents: write
