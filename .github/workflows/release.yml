@@ -55,6 +55,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ macos-13, ubuntu-latest, windows-latest ]
+    defaults:
+      run:
+        shell: bash
 
     runs-on: ${{ matrix.os }}
 
