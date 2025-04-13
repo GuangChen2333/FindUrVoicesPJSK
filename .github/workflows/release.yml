@@ -9,7 +9,7 @@ on:
 
 jobs:
   version:
-    name: Version edit
+    name: Version Update
 
     runs-on: ubuntu-latest
 
