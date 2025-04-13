@@ -27,7 +27,7 @@ class Client:
         self._save_folder = os.path.abspath(save_path)
         self._wait_time = wait_time
         self._max_retries = max_retries
-        logger.info(f"The files will save in {os.path.join(self._save_folder, 'dataset_[ID]\\')}")
+        logger.info(f"The files will save in {os.path.join(self._save_folder, 'dataset_[ID]')}")
         self._download_data()
 
     def _get(self, url: str, params: Optional[dict] = None) -> httpx.Response | None:
@@ -67,7 +67,7 @@ class Client:
         for i, character in enumerate(self._characters):
             choices.append(
                 questionary.Choice(
-                    f"{character['firstName'] if "firstName" in character else ""}{character['givenName']}",
+                    f"{character['firstName'] if 'firstName' in character else ''}{character['givenName']}",
                     i
                 )
             )
@@ -139,8 +139,8 @@ class Client:
 
                 url = f"{base_url}/{scenario_id}/{voice['VoiceId']}.mp3"
                 file_name = f"{prefix}{str(index).zfill(file_name_len)}.mp3"
-
-                logger.info(f"Downloading {data['Body'].replace("\n", "")} -> {file_name} ...")
+                cleaned_body = data['Body'].replace("\n", "")
+                logger.info(f"Downloading {cleaned_body} -> {file_name} ...")
 
                 with open(os.path.join(save_path, file_name), "wb") as f:
                     content = self._get(url).content
@@ -148,6 +148,12 @@ class Client:
                         logger.warning("Get status code 404, perhaps the resource is not exist.")
                         return -1
                     f.write(content)
+
+                # 保存 data['Body'] 文本为对应的 .txt 文件
+                base_name, _ = os.path.splitext(file_name)
+                txt_file_name = f"{base_name}.txt"
+                with open(os.path.join(save_path, txt_file_name), "w", encoding="utf-8") as txt_f:
+                    txt_f.write(data['Body'])
 
                 index += 1
 
@@ -167,7 +173,7 @@ class Client:
 
         select_character_2d_ids = [x['id'] for x in self._character_2ds if x['characterId'] == character_id]
 
-        logger.info(f"Character 2d ids: {", ".join([str(x) for x in select_character_2d_ids])}")
+        logger.info(f"Character 2d ids: {', '.join([str(x) for x in select_character_2d_ids])}")
 
         logger.info("Downloading profile voices asset file...")
         profile_voice_asset = self._get(
@@ -193,7 +199,7 @@ class Client:
         logger.info(f"Character card counts: {len(character_cards)}")
 
         select_character_2d_ids = [x['id'] for x in self._character_2ds if x['characterId'] == character_id]
-        logger.info(f"Character 2d ids: {", ".join([str(x) for x in select_character_2d_ids])}")
+        logger.info(f"Character 2d ids: {', '.join([str(x) for x in select_character_2d_ids])}")
 
         index = 1
 
