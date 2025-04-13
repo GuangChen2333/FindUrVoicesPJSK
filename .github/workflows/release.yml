@@ -17,6 +17,9 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
+    permissions:
+      contents: write
+
     steps:
       - uses: actions/checkout@v4
 
@@ -26,17 +29,31 @@ jobs:
           python-version: '3.12'
           architecture: 'x64'
 
-      - name: Install Poetry
-        run: |
-          pip install poetry
-
-      - name: Configure Poetry
-        run: |
-          poetry config virtualenvs.create false
+      - name: Install Poetry Action
+        uses: snok/install-poetry@v1.4.1
+        with:
+            virtualenvs-create: false
 
       - name: Install Dependencies
         run: |
           poetry install --with dev
+
+      - name: Update version
+        run: poetry version ${{ inputs.release-tag }}
+
+      - name: Commit and push if changes
+        shell: bash --noprofile --norc {0}
+        run: |
+          changes=$(git diff --name-only origin/master | wc -l)
+          if [ $changes -gt 0 ]
+          then
+            git config user.name 'github-actions[bot]'
+            git config user.email 'github-actions[bot]@users.noreply.github.com'
+            git add pyproject.toml
+            git commit -am "Bump version to ${{ inputs.release-tag }}"
+            git tag "v${{ inputs.release-tag }}"
+            git push --follow-tags
+          fi
 
       - name: Build Executable
         uses: Nuitka/Nuitka-Action@v1.1
