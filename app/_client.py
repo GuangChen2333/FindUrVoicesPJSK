@@ -111,7 +111,7 @@ class Client:
             with open(os.path.join(save_path, file_name), "wb") as f:
                 content = self._get(
                     "https://storage.sekai.best"
-                    f"/sekai-jp-assets/music/long/{music_asset_bundle_name}_rip/{music_asset_bundle_name}.mp3").content
+                    f"/sekai-jp-assets/music/long/{music_asset_bundle_name}/{music_asset_bundle_name}.mp3").content
 
                 if not content:
                     logger.warning("Get status code 404, perhaps the resource is not exist.")
@@ -137,7 +137,7 @@ class Client:
                 if voice['Character2dId'] not in select_character_2d_ids:
                     continue
 
-                url = f"{base_url}/{scenario_id}_rip/{voice['VoiceId']}.mp3"
+                url = f"{base_url}/{scenario_id}/{voice['VoiceId']}.mp3"
                 file_name = f"{prefix}{str(index).zfill(file_name_len)}.mp3"
 
                 logger.info(f"Downloading {data['Body'].replace("\n", "")} -> {file_name} ...")
@@ -171,7 +171,7 @@ class Client:
 
         logger.info("Downloading profile voices asset file...")
         profile_voice_asset = self._get(
-            f"https://storage.sekai.best/sekai-jp-assets/scenario/profile_rip/{scenario_id}.asset"
+            f"https://storage.sekai.best/sekai-jp-assets/scenario/profile/{scenario_id}.asset"
         ).json()
         logger.info(f"Profile voice asset name: {profile_voice_asset['m_Name']}")
         self._parse_and_download_asset(
@@ -206,7 +206,7 @@ class Client:
                 logger.info(f"Scenario id: {scenario_id}")
                 asset = self._get(
                     "https://storage.sekai.best/sekai-jp-assets/character/member/"
-                    f"{asset_bundle_name}_rip/{scenario_id}.asset"
+                    f"{asset_bundle_name}/{scenario_id}.asset"
                 ).json()
 
                 index_return = self._parse_and_download_asset(
