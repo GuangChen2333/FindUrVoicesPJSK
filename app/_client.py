@@ -89,8 +89,12 @@ class Client:
 
         return save_path
 
-    def _serialize_manifest_format(self, path: str, speaker: str, text: str):
-        pass
+    def _serialize_manifest_format(self, **kwargs) -> str:
+        result = self._default_manifest_format
+        for key, item in kwargs.items():
+            result.replace("{" + key + "}", item)
+        return result
+
 
     def download_solo_songs(self, character_id: int) -> None:
         # Code S000
