@@ -29,6 +29,7 @@ class Client:
         self._max_retries = max_retries
         logger.info(f"The files will save in {os.path.join(self._save_folder, 'dataset_[ID]')}")
         self._download_data()
+        self._save_contents = True
 
     def _get(self, url: str, params: Optional[dict] = None) -> httpx.Response | None:
         retries = 0
@@ -246,6 +247,9 @@ class Client:
         self.download_character_profile_voices(character_id)
         self.download_character_cards_voices(character_id, card_voices_count)
 
+    def ask_save_contents(self):
+        self._save_contents = questionary.confirm("Save contents into files?", default=True).ask()
+
     def start(self):
         mode = questionary.select(
             "Please select the mode: ",
@@ -260,22 +264,31 @@ class Client:
 
         character_id = self.select_character()
 
-        if mode == 0:
-            card_voices_count = int(
-                questionary.text("Please input the card max voices count: ", default="800").ask()
-            )
-            self.download_all(character_id, card_voices_count)
-        elif mode == 1:
-            card_voices_count = int(
-                questionary.text("Please input the card max voices count: ", default="800").ask()
-            )
-            self.download_pure_voices(character_id, card_voices_count)
-        elif mode == 2:
-            self.download_solo_songs(character_id)
-        elif mode == 3:
-            self.download_character_profile_voices(character_id)
-        elif mode == 4:
-            card_voices_count = int(
-                questionary.text("Please input the card max voices count: ", default="800").ask()
-            )
-            self.download_character_cards_voices(character_id, card_voices_count)
+        match mode:
+            case 0:
+                card_voices_count = int(
+                    questionary.text("Please input the card max voices count: ", default="800").ask()
+                )
+                self.ask_save_contents()
+                self.download_all(character_id, card_voices_count)
+
+            case 1:
+                card_voices_count = int(
+                    questionary.text("Please input the card max voices count: ", default="800").ask()
+                )
+                self.ask_save_contents()
+                self.download_pure_voices(character_id, card_voices_count)
+
+            case 2:
+                self.download_solo_songs(character_id)
+
+            case 3:
+                self.ask_save_contents()
+                self.download_character_profile_voices(character_id)
+
+            case 4:
+                card_voices_count = int(
+                    questionary.text("Please input the card max voices count: ", default="800").ask()
+                )
+                self.ask_save_contents()
+                self.download_character_cards_voices(character_id, card_voices_count)
