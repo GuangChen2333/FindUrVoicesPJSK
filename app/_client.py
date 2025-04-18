@@ -255,10 +255,10 @@ class Client:
         self.download_character_profile_voices(character_id)
         self.download_character_cards_voices(character_id, card_voices_count)
 
-    def _ask_save_texts(self):
+    def _ask_save_texts(self) -> None:
         self._save_texts = questionary.confirm("Save texts into files?", default=True).ask()
 
-    def start(self):
+    def start(self) -> None:
         mode = questionary.select(
             "Please select the mode: ",
             choices=[
