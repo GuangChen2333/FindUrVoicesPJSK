@@ -15,6 +15,7 @@ class Client:
             save_path: Optional[str] = "./output/",
             wait_time: Optional[float] = 1,
             max_retries: Optional[int] = 5,
+            manifest_name: Optional[str] = "manifest.list"
     ):
         logger.remove()
         logger.add(
@@ -27,10 +28,13 @@ class Client:
         self._save_folder = os.path.abspath(save_path)
         self._wait_time = wait_time
         self._max_retries = max_retries
+        self._save_texts = True
+        self._default_manifest_format = r"{path}|{text}"
+        self._manifest_file_instance = None
+        self._manifest_name = manifest_name
         logger.info(f"The files will save in {os.path.join(self._save_folder, 'dataset_[ID]')}")
         self._download_data()
-        self._save_texts = True
-        self._default_manifest_format = r"{path}|{speaker}|{text}"
+
 
     def _get(self, url: str, params: Optional[dict] = None) -> httpx.Response | None:
         retries = 0
@@ -92,9 +96,8 @@ class Client:
     def _serialize_manifest_format(self, **kwargs) -> str:
         result = self._default_manifest_format
         for key, item in kwargs.items():
-            result.replace("{" + key + "}", item)
+            result = result.replace("{" + key + "}", item)
         return result
-
 
     def download_solo_songs(self, character_id: int) -> None:
         # Code S000
@@ -159,10 +162,22 @@ class Client:
                     f.write(content)
 
                 # 保存 data['Body'] 文本为对应的 .txt 文件
-                base_name, _ = os.path.splitext(file_name)
-                txt_file_name = f"{base_name}.txt"
-                with open(os.path.join(save_path, txt_file_name), "w", encoding="utf-8") as txt_f:
-                    txt_f.write(data['Body'])
+                if self._save_texts:
+                    if not self._manifest_file_instance:
+                        self._manifest_file_instance = open(
+                            os.path.join(save_path, self._manifest_name),
+                            "w+",
+                            encoding="utf-8"
+                        )
+
+                    line = self._serialize_manifest_format(
+                        path = os.path.join(
+                            save_path, file_name
+                        ),
+                        text = cleaned_body
+                    ) + "\n"
+
+                    self._manifest_file_instance.write(line)
 
                 index += 1
 
