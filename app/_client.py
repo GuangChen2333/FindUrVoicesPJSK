@@ -35,7 +35,6 @@ class Client:
         logger.info(f"The files will save in {os.path.join(self._save_folder, 'dataset_[ID]')}")
         self._download_data()
 
-
     def _get(self, url: str, params: Optional[dict] = None) -> httpx.Response | None:
         retries = 0
         while retries < self._max_retries:
@@ -171,10 +170,10 @@ class Client:
                         )
 
                     line = self._serialize_manifest_format(
-                        path = os.path.join(
+                        path=os.path.join(
                             save_path, file_name
                         ),
-                        text = cleaned_body
+                        text=cleaned_body
                     ) + "\n"
 
                     self._manifest_file_instance.write(line)
