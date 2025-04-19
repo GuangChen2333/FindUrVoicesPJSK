@@ -314,3 +314,8 @@ class Client:
                 )
                 self._ask_save_texts()
                 self.download_character_cards_voices(character_id, card_voices_count)
+
+        if self._manifest_file_instance:
+            self._manifest_file_instance.close()
+            self._manifest_file_instance = None
+            logger.info("Task finished.")
