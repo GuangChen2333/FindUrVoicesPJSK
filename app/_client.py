@@ -15,6 +15,7 @@ class Client:
             save_path: Optional[str] = "./output/",
             wait_time: Optional[float] = 1,
             max_retries: Optional[int] = 5,
+            manifest_name: Optional[str] = "manifest.list"
     ):
         logger.remove()
         logger.add(
@@ -27,7 +28,11 @@ class Client:
         self._save_folder = os.path.abspath(save_path)
         self._wait_time = wait_time
         self._max_retries = max_retries
-        logger.info(f"The files will save in {os.path.join(self._save_folder, 'dataset_[ID]\\')}")
+        self._save_texts = True
+        self._default_manifest_format = r"{path}|{text}"
+        self._manifest_file_instance = None
+        self._manifest_name = manifest_name
+        logger.info(f"The files will save in {os.path.join(self._save_folder, 'dataset_[ID]')}")
         self._download_data()
 
     def _get(self, url: str, params: Optional[dict] = None) -> httpx.Response | None:
@@ -67,7 +72,7 @@ class Client:
         for i, character in enumerate(self._characters):
             choices.append(
                 questionary.Choice(
-                    f"{character['firstName'] if "firstName" in character else ""}{character['givenName']}",
+                    f"{character['firstName'] if 'firstName' in character else ''}{character['givenName']}",
                     i
                 )
             )
@@ -86,6 +91,12 @@ class Client:
             os.makedirs(save_path)
 
         return save_path
+
+    def _serialize_manifest_format(self, **kwargs) -> str:
+        result = self._default_manifest_format
+        for key, item in kwargs.items():
+            result = result.replace("{" + key + "}", item)
+        return result
 
     def download_solo_songs(self, character_id: int) -> None:
         # Code S000
@@ -139,8 +150,8 @@ class Client:
 
                 url = f"{base_url}/{scenario_id}/{voice['VoiceId']}.mp3"
                 file_name = f"{prefix}{str(index).zfill(file_name_len)}.mp3"
-
-                logger.info(f"Downloading {data['Body'].replace("\n", "")} -> {file_name} ...")
+                cleaned_body = data['Body'].replace("\n", "")
+                logger.info(f"Downloading {cleaned_body} -> {file_name} ...")
 
                 with open(os.path.join(save_path, file_name), "wb") as f:
                     content = self._get(url).content
@@ -148,6 +159,24 @@ class Client:
                         logger.warning("Get status code 404, perhaps the resource is not exist.")
                         return -1
                     f.write(content)
+
+                # 保存 data['Body'] 文本为对应的 .txt 文件
+                if self._save_texts:
+                    if not self._manifest_file_instance:
+                        self._manifest_file_instance = open(
+                            os.path.join(save_path, self._manifest_name),
+                            "w+",
+                            encoding="utf-8"
+                        )
+
+                    line = self._serialize_manifest_format(
+                        path=os.path.join(
+                            save_path, file_name
+                        ),
+                        text=cleaned_body
+                    ) + "\n"
+
+                    self._manifest_file_instance.write(line)
 
                 index += 1
 
@@ -167,7 +196,7 @@ class Client:
 
         select_character_2d_ids = [x['id'] for x in self._character_2ds if x['characterId'] == character_id]
 
-        logger.info(f"Character 2d ids: {", ".join([str(x) for x in select_character_2d_ids])}")
+        logger.info(f"Character 2d ids: {', '.join([str(x) for x in select_character_2d_ids])}")
 
         logger.info("Downloading profile voices asset file...")
         profile_voice_asset = self._get(
@@ -193,7 +222,7 @@ class Client:
         logger.info(f"Character card counts: {len(character_cards)}")
 
         select_character_2d_ids = [x['id'] for x in self._character_2ds if x['characterId'] == character_id]
-        logger.info(f"Character 2d ids: {", ".join([str(x) for x in select_character_2d_ids])}")
+        logger.info(f"Character 2d ids: {', '.join([str(x) for x in select_character_2d_ids])}")
 
         index = 1
 
@@ -240,7 +269,10 @@ class Client:
         self.download_character_profile_voices(character_id)
         self.download_character_cards_voices(character_id, card_voices_count)
 
-    def start(self):
+    def _ask_save_texts(self) -> None:
+        self._save_texts = questionary.confirm("Save texts into files?", default=True).ask()
+
+    def start(self) -> None:
         mode = questionary.select(
             "Please select the mode: ",
             choices=[
@@ -254,22 +286,36 @@ class Client:
 
         character_id = self.select_character()
 
-        if mode == 0:
-            card_voices_count = int(
-                questionary.text("Please input the card max voices count: ", default="800").ask()
-            )
-            self.download_all(character_id, card_voices_count)
-        elif mode == 1:
-            card_voices_count = int(
-                questionary.text("Please input the card max voices count: ", default="800").ask()
-            )
-            self.download_pure_voices(character_id, card_voices_count)
-        elif mode == 2:
-            self.download_solo_songs(character_id)
-        elif mode == 3:
-            self.download_character_profile_voices(character_id)
-        elif mode == 4:
-            card_voices_count = int(
-                questionary.text("Please input the card max voices count: ", default="800").ask()
-            )
-            self.download_character_cards_voices(character_id, card_voices_count)
+        match mode:
+            case 0:
+                card_voices_count = int(
+                    questionary.text("Please input the card max voices count: ", default="800").ask()
+                )
+                self._ask_save_texts()
+                self.download_all(character_id, card_voices_count)
+
+            case 1:
+                card_voices_count = int(
+                    questionary.text("Please input the card max voices count: ", default="800").ask()
+                )
+                self._ask_save_texts()
+                self.download_pure_voices(character_id, card_voices_count)
+
+            case 2:
+                self.download_solo_songs(character_id)
+
+            case 3:
+                self._ask_save_texts()
+                self.download_character_profile_voices(character_id)
+
+            case 4:
+                card_voices_count = int(
+                    questionary.text("Please input the card max voices count: ", default="800").ask()
+                )
+                self._ask_save_texts()
+                self.download_character_cards_voices(character_id, card_voices_count)
+
+        if self._manifest_file_instance:
+            self._manifest_file_instance.close()
+            self._manifest_file_instance = None
+            logger.info("Task finished.")
