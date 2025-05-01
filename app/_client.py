@@ -48,6 +48,7 @@ class Client:
                     time.sleep(self._wait_time)
                 else:
                     raise httpx.ConnectError
+        return None
 
     def _download_data(self) -> None:
         logger.info("Downloading character data ...")
