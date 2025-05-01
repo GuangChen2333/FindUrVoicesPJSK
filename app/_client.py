@@ -115,14 +115,14 @@ class Client:
 
             music_title = musics_detail[0]['title']
             music_asset_bundle_name = music['assetbundleName']
-            file_name = f"S{str(index).zfill(3)}.mp3"
+            file_name = f"S{str(index).zfill(3)}.wav"
 
             logger.info(f"Downloading {music_title} | {music_asset_bundle_name} -> {file_name} ...")
 
             with open(os.path.join(save_path, file_name), "wb") as f:
                 content = self._get(
                     "https://storage.sekai.best"
-                    f"/sekai-jp-assets/music/long/{music_asset_bundle_name}/{music_asset_bundle_name}.mp3").content
+                    f"/sekai-jp-assets/music/long/{music_asset_bundle_name}/{music_asset_bundle_name}.wav").content
 
                 if not content:
                     logger.warning("Get status code 404, perhaps the resource is not exist.")
@@ -148,8 +148,8 @@ class Client:
                 if voice['Character2dId'] not in select_character_2d_ids:
                     continue
 
-                url = f"{base_url}/{scenario_id}/{voice['VoiceId']}.mp3"
-                file_name = f"{prefix}{str(index).zfill(file_name_len)}.mp3"
+                url = f"{base_url}/{scenario_id}/{voice['VoiceId']}.wav"
+                file_name = f"{prefix}{str(index).zfill(file_name_len)}.wav"
                 cleaned_body = data['Body'].replace("\n", "")
                 logger.info(f"Downloading {cleaned_body} -> {file_name} ...")
 
