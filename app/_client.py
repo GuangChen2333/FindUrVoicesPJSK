@@ -166,7 +166,8 @@ class Client:
                         self._manifest_file_instance = open(
                             os.path.join(save_path, self._manifest_name),
                             "w+",
-                            encoding="utf-8"
+                            encoding="utf-8",
+                            buffering=1
                         )
 
                     line = self._serialize_manifest_format(
