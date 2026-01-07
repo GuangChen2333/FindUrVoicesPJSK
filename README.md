@@ -25,13 +25,13 @@ poetry run python main.py
 ## Manifest 重写 GPT-SoVITS 格式
 使用脚本将 `manifest.list` 转为 `folder/filename|<id>|ja|content` 格式：
 ```bash
-python scripts/rewrite_manifest.py <manifest_path> <target_folder> <character_id>
+python scripts/manifest_for_gpt_sovits.py <manifest_path> <target_folder> <character_id>
 ```
 示例：
 ```bash
-python scripts/rewrite_manifest.py output/dataset_4/manifest.list output/normalized shiho_hinomori
+python scripts/manifest_for_gpt_sovits.py output/dataset_4/manifest.list output/normalized shiho_hinomori
 ```
-脚本会复用原始文件名，写回同一 `manifest.list`（目标文件夹自动创建）。
+脚本会复用原始文件名，并处理这些音频文件的位置，写 `manifest.list`（目标文件夹自动创建）。
 
 ## 支持的下载内容 Supported Content
 - 独唱 Solo songs
