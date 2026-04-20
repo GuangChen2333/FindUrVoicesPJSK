@@ -1,5 +1,4 @@
 import argparse
-import os
 from pathlib import Path
 
 
@@ -17,12 +16,17 @@ def rewrite_manifest(
         if not line.strip():
             continue
 
-        parts = line.split("|", 1)
-        if len(parts) != 2:
+        parts = line.split("|")
+        if len(parts) == 2:
+            original_path, content = parts
+        elif len(parts) >= 4:
+            original_path = parts[0]
+            content = "|".join(parts[3:])
+        else:
             continue
 
-        original_path, content = parts
-        filename = os.path.basename(original_path)
+        # Windows 路径用 ntpath 解析，避免在 POSIX 上 basename 失效
+        filename = original_path.replace("\\", "/").rsplit("/", 1)[-1]
 
         # 关键改动 1：生成绝对路径
         new_path = (target_dir / filename).resolve()
